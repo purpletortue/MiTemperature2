@@ -1,6 +1,4 @@
-#!/usr/bin/python3 -u
-#!/home/openhabian/Python3/Python-3.7.4/python -u
-#-u to unbuffer output. Otherwise when calling with nohup or redirecting output things are printed very lately or would even mixup
+#!/usr/bin/env -S python3 -u
 
 print("---------------------------------------------")
 print("MiTemperature2 / ATC Thermometer version 3.1")
@@ -30,7 +28,7 @@ class Measurement:
 	battery: int = 0
 	timestamp: int = 0
 	sensorname: str	= ""
-	rssi: int = 0 
+	rssi: int = 0
 
 	def __eq__(self, other): #rssi may be different, so exclude it from comparison
 		if self.temperature == other.temperature and self.humidity == other.humidity and self.calibratedHumidity == other.calibratedHumidity and self.battery == other.battery and self.sensorname == other.sensorname:
@@ -62,9 +60,9 @@ def myMQTTPublish(topic,jsonMessage):
 
 def signal_handler(sig, frame):
 	if args.atc:
-		disable_le_scan(sock)	
+		disable_le_scan(sock)
 	os._exit(0)
-		
+
 def watchDog_Thread():
 	global unconnectedTime
 	global connected
@@ -86,7 +84,7 @@ def watchDog_Thread():
 			logging.debug("Killed bluepy with pid: " + str(bluepypid))
 			unconnectedTime = now #reset unconnectedTime to prevent multiple killings in a row
 		time.sleep(5)
-	
+
 
 def thread_SendingData():
 	global previousMeasurements
@@ -160,7 +158,7 @@ def thread_SendingData():
 			print(e)
 			print(traceback.format_exc())
 
-sock = None #from ATC 
+sock = None #from ATC
 lastBLEPaketReceived = 0
 BLERestartCounter = 1
 def keepingLEScanRunning(): #LE-Scanning gets disabled sometimes, especially if you have a lot of BLE connections, this thread periodically enables BLE scanning again
@@ -203,7 +201,7 @@ class MyDelegate(btle.DefaultDelegate):
 	def __init__(self, params):
 		btle.DefaultDelegate.__init__(self)
 		# ... initialise here
-	
+
 	def handleNotification(self, cHandle, data):
 		global measurements
 		try:
@@ -216,7 +214,7 @@ class MyDelegate(btle.DefaultDelegate):
 			#print("Temp received: " + str(temp))
 			if args.round:
 				#print("Temperatur unrounded: " + str(temp
-				
+
 				if args.debounce:
 					global mode
 					temp*=10
@@ -252,7 +250,7 @@ class MyDelegate(btle.DefaultDelegate):
 			batteryLevel = min(int(round((voltage - 2.1),2) * 100), 100) #3.1 or above --> 100% 2.1 --> 0 %
 			measurement.battery = batteryLevel
 			print("Battery level:",batteryLevel)
-				
+
 
 			if args.offset:
 				humidityCalibrated = humidity + args.offset
@@ -279,12 +277,12 @@ class MyDelegate(btle.DefaultDelegate):
 			print("Fehler")
 			print(e)
 			print(traceback.format_exc())
-		
+
 # Initialisation  -------
 
 def connect():
 	#print("Interface: " + str(args.interface))
-	p = btle.Peripheral(adress,iface=args.interface)	
+	p = btle.Peripheral(adress,iface=args.interface)
 	val=b'\x01\x00'
 	p.writeCharacteristic(0x0038,val,True) #enable notifications of Temperature, Humidity and Battery voltage
 	p.writeCharacteristic(0x0046,b'\xf4\x01\x00',True)
@@ -305,7 +303,7 @@ def MQTTOnPublish(client,userdata,mid):
 	print("MQTT published, Client:",client," Userdata:",userdata," mid:", mid)
 
 def MQTTOnDisconnect(client, userdata,rc):
-	print("MQTT disconnected, Client:", client, "Userdata:", userdata, "RC:", rc)	
+	print("MQTT disconnected, Client:", client, "Userdata:", userdata, "RC:", rc)
 
 # Main loop --------
 parser=argparse.ArgumentParser(allow_abbrev=False)
@@ -393,10 +391,10 @@ if args.mqttconfigfile:
 	if len(lwt) > 0:
 		print("Using lastwill with topic:",lwt,"and message:",lastwill)
 		client.will_set(lwt,lastwill,qos=1)
-	
+
 	client.connect_async(broker,port)
 	MQTTClient=client
-	
+
 
 if args.device:
 	if re.match("[0-9a-fA-F]{2}([:]?)[0-9a-fA-F]{2}(\\1[0-9a-fA-F]{2}){4}$",args.device):
@@ -422,9 +420,9 @@ if args.callback or args.httpcallback:
 	dataThread = threading.Thread(target=thread_SendingData)
 	dataThread.start()
 
-signal.signal(signal.SIGINT, signal_handler)	
+signal.signal(signal.SIGINT, signal_handler)
 
-if args.device: 
+if args.device:
 
 	p=btle.Peripheral()
 	cnt=0
@@ -433,7 +431,7 @@ if args.device:
 	#logging.basicConfig(level=logging.DEBUG)
 	logging.basicConfig(level=logging.ERROR)
 	logging.debug("Debug: Starting script...")
-	pid=os.getpid()	
+	pid=os.getpid()
 	bluepypid=None
 	unconnectedTime=None
 	connectionLostCounter=0
@@ -453,7 +451,7 @@ if args.device:
 					# print("Killed possibly remaining bluepy-helper")
 				# else:
 					# print("bluepy-helper couldn't be determined, killing not allowed")
-						
+
 				print("Trying to connect to " + adress)
 				p=connect()
 				# logging.debug("Own PID: "  + str(pid))
@@ -462,10 +460,10 @@ if args.device:
 				# try:
 					# bluepypid=re.findall(r'bluepy-helper\((.*)\)',pstree)[0] #Store the bluepypid, to kill it later
 				# except IndexError: #Should not happen since we're now connected
-					# logging.debug("Couldn't find pid of bluepy-helper")				
+					# logging.debug("Couldn't find pid of bluepy-helper")
 				connected=True
 				unconnectedTime=None
-				
+
 			# if args.battery:
 					# if(cnt % args.battery == 0):
 						# print("Warning the battery option is deprecated, Aqara device always reports 99 % battery")
@@ -473,11 +471,11 @@ if args.device:
 						# batt=int.from_bytes(batt,byteorder="little")
 						# print("Battery-Level: " + str(batt))
 						# globalBatteryLevel = batt
-				
-				
+
+
 			if p.waitForNotifications(2000):
 				# handleNotification() was called
-				
+
 				cnt += 1
 				if args.count is not None and cnt >= args.count:
 					print(str(args.count) + " measurements collected. Exiting in a moment.")
@@ -507,8 +505,8 @@ if args.device:
 				os._exit(0)
 			time.sleep(1)
 			logging.debug(e)
-			logging.debug(traceback.format_exc())		
-			
+			logging.debug(traceback.format_exc())
+
 		print ("Waiting...")
 		# Perhaps do something else here
 
@@ -529,7 +527,7 @@ elif args.atc:
 								enable_le_scan, parse_le_advertising_events,
 								disable_le_scan, raw_packet_to_str)
 
-	advCounter=dict() 
+	advCounter=dict()
 	sensors = dict()
 	if args.devicelistfile:
 		#import configparser
@@ -550,7 +548,7 @@ elif args.atc:
 
 	dev_id = args.interface  # the bluetooth device is hci0
 	toggle_device(dev_id, True)
-	
+
 	try:
 		sock = bluez.hci_open_dev(dev_id)
 	except:
@@ -574,7 +572,7 @@ elif args.atc:
 				#print("reveived BLE packet")+
 			atcData_str = data_str[offset:offset+26]
 			ATCPaketMAC = atcData_str[0:12].upper()
-			macStr = mac.replace(":","").upper() 
+			macStr = mac.replace(":","").upper()
 			atcIdentifier = data_str[(offset-4):offset].upper()
 
 			if(atcIdentifier == "1A18" and ATCPaketMAC == macStr) and not args.onlydevicelist or (atcIdentifier == "1A18" and mac in sensors) and len(atcData_str) == 26: #only Data from ATC devices, double checked
@@ -631,7 +629,7 @@ elif args.atc:
 							currentMQTTTopic=sensors[mac]["topic"]
 					else:
 						measurement.sensorname = mac
-					
+
 					if measurement.calibratedHumidity == 0:
 						measurement.calibratedHumidity = measurement.humidity
 
@@ -644,7 +642,7 @@ elif args.atc:
 						#MQTTClient.publish(currentMQTTTopic,jsonString,1)
 
 					#print("Length:", len(measurements))
-					print("")	
+					print("")
 
 		if  args.watchdogtimer:
 			keepingLEScanRunningThread = threading.Thread(target=keepingLEScanRunning)
