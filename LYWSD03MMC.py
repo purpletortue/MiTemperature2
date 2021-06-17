@@ -363,6 +363,7 @@ if args.mqttconfigfile:
 	mqttConfig.read(args.mqttconfigfile)
 	broker = mqttConfig["MQTT"]["broker"]
 	port = int(mqttConfig["MQTT"]["port"])
+	certificate = mqttConfig["MQTT"]["certificate"]
 	username = mqttConfig["MQTT"]["username"]
 	password = mqttConfig["MQTT"]["password"]
 	MQTTTopic = mqttConfig["MQTT"]["topic"]
@@ -387,6 +388,7 @@ if args.mqttconfigfile:
 	client.on_disconnect = MQTTOnDisconnect
 	client.reconnect_delay_set(min_delay=1,max_delay=60)
 	client.loop_start()
+	client.tls_set(certificate)
 	client.username_pw_set(username,password)
 	if len(lwt) > 0:
 		print("Using lastwill with topic:",lwt,"and message:",lastwill)
