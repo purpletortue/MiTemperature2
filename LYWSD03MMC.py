@@ -599,6 +599,8 @@ elif args.atc:
 
 					#temperature = int(data_str[22:26],16) / 10.
 					temperature = round(int.from_bytes(bytearray.fromhex(atcData_str[12:16]),byteorder='big',signed=True) / 10. * 9. / 5. + 32, 1)
+					if args.round:
+						temperature = int(round(temperature,0))
 					print("Temperature: ", temperature)
 					humidity = int(atcData_str[16:18], 16)
 					print("Humidity: ", humidity)
